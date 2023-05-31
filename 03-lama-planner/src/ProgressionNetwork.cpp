@@ -103,7 +103,12 @@ searchNode::~searchNode() {
 	delete[] containedTasks;
 	delete[] containedTaskCount;
 
-	// todo: need to destroy heuristic payload. To do so, I need to know the number of heuristics used
+	if (hPL != nullptr) {
+		for (int i = 0; i < numHeuristics; i++) {
+			delete hPL[i];
+		}
+		delete[] hPL;
+	}
 }
 
 
@@ -154,7 +159,8 @@ void searchNode::node2Dot(std::ostream & out){
 }
 
 
-
+bool printSolInfo = true;
+string res = "";
 
 #ifdef TRACESOLUTION
 pair<string,int> extractSolutionFromSearchNode(Model * htn, searchNode* tnSol){
@@ -176,20 +182,33 @@ pair<string,int> extractSolutionFromSearchNode(Model * htn, searchNode* tnSol){
 			application.second = htn->taskNames[sost->task] + " -> " + htn->methodNames[sost->method];
 			decompositionStructure.push_back(application);
 			if (sost->task == htn->initialTask) root = application.first;
+//            if (printSolInfo) {
+//                string s = to_string(sost->mySolutionStepInstanceNumber);
+//
+//
+//                s.append("\n");
+//                s.append(res);
+//                res = s;
+//            }
 		} else {
-			sol = to_string(sost->mySolutionStepInstanceNumber) + " " +
-					htn->taskNames[sost->task] + "\n" + sol;
+			sol = to_string(sost->mySolutionStepInstanceNumber) + " " + htn->taskNames[sost->task] + "\n" + sol;
+//            if (printSolInfo) {
+//                string s = to_string(sost->mySolutionStepInstanceNumber);
+//                s.append("\n");
+//                s.append(res);
+//                res = s;
+//            }
 		}
 		
-		if (sost->mySolutionStepInstanceNumber != 0)
-			children[sost->parentSolutionStepInstanceNumber].push_back(
-					make_pair(
-						sost->myPositionInParent,
-						sost->mySolutionStepInstanceNumber));
-		
+		if (sost->mySolutionStepInstanceNumber != 0) {
+            children[sost->parentSolutionStepInstanceNumber].push_back(make_pair(sost->myPositionInParent,sost->mySolutionStepInstanceNumber));
+        }
 		done = sost->prev == nullptr;
 		sost = sost->prev;
 	}
+//    if (printSolInfo) {
+//        cout << res;
+//    }
 
 	sol = "==>\n" + sol;
 	sol = sol + "root " + to_string(root) + "\n";

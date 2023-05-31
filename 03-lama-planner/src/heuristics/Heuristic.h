@@ -7,11 +7,16 @@
 
 #include "../Model.h"
 
+enum helpfulA {none, onlyActions, onlyMethods, all};
+
 class Heuristic {
 protected:
     int index;
     Model* htn;
 public:
+    int calculated = 0;
+    helpfulA helpfulActions = none;
+    bool deferredComputation = false;
     Heuristic(Model* htnModel, int index);
     
 	// returns textual description of the heuristic for output 

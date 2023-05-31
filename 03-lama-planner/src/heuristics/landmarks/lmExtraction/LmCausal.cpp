@@ -137,6 +137,40 @@ namespace progression {
         this->pCalcLMs(n);
     }
 
+    lmGraph* LmCausal::calcLMs() {
+        searchNode* tnI = htn->prepareTNi(htn);
+        this->calcLMs(tnI);
+        delete tnI;
+
+        // copy to returned data structure
+        lmGraph* g = new lmGraph();
+        g->numLMs = this->numLMs;
+        g->lms = new lmNode[g->numLMs];
+
+        for (int i = 0; i < numLMs; i++) {
+            landmark* lm = landmarks[i];
+
+            // build new node
+            g->lms[i].connection = conjunctive;
+            tLmAtom* atom = new tLmAtom();
+            atom->type = lm->type;
+            atom->lm = lm->lm[0];
+            assert(lm->size == 1);
+            atom->isNegated = false;
+            if ((atom->type == task) || ((atom->type == action))) {
+                atom->nameStr = htn->taskNames[atom->lm];
+            } else if (atom->type == fact) {
+                atom->nameStr = htn->factStrs[atom->lm];
+            } else if (atom->type == METHOD) {
+                atom->nameStr = htn->methodNames[atom->lm];
+            }
+
+            g->lms[i].lm.push_back(atom);
+        }
+        g->initOrderings();
+        return g;
+    }
+
     /*
      * LM calculation
      */
@@ -167,7 +201,9 @@ namespace progression {
             if (reachable(nIndex)) { // it might not be top down reachable
                 heap->add(0, nIndex);
                 alreadyIn[nIndex] = true;
-            }
+            } //else {
+              //cout << "- precless action not tdr: " << htn->taskNames[a] << endl;
+            //}
         }
 
         while (!heap->isEmpty()) {
@@ -191,6 +227,11 @@ namespace progression {
                 numUpdates++;
                 for (int i = 0; i < n->numAffectedNodes; i++) {
                     int affected = n->affectedNodes[i];
+                    /*if (!reachable(affected)) {
+                        cout << " affected not reachable: ";
+                        nodes[affected]->print();
+                        cout << endl;
+                    }*/
                     if ((reachable(affected)) && (!alreadyIn[affected])) {
                         //if (reachable(affected)) {
                         //int k = 0;
@@ -208,7 +249,6 @@ namespace progression {
                 // cout << metric <<  " node" << ni << " UNchanged" << endl;
                 numNonUpdates++;
             }
-
         }
 
         // clean up

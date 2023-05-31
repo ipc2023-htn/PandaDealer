@@ -3,6 +3,7 @@ set(CMAKE_CXX_STANDARD 17)
 
 # set(CPLEX_SOURCE_DIR /home/gregor/Workspace/cplex)
 # set(CPLEX_SOURCE_DIR /home/dh/Programme/CPLEX_Studio1210)
+set(CPLEX_SOURCE_DIR /home/dh/programme/cplex)
 
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
@@ -22,7 +23,10 @@ find_program(GENGETOPT gengetopt)
 
 ## required for IBM's CPLEX in order to force it to use newer names for the std headers
 add_definitions(-DIL_STD)
-list(APPEND compiler_flags -Wall -Wextra -Wno-unused-parameter -Wno-sign-compare -pedantic "$<$<CONFIG:DEBUG>:-Og;-ggdb3;-lpthread>" "$<$<CONFIG:RELEASE>:-O2;-lpthread>")
+#list(APPEND compiler_flags -Wall -Wextra -Wno-unused-parameter -Wno-sign-compare -pedantic "$<$<CONFIG:DEBUG>:-Og;-ggdb3;-lpthread>" "$<$<CONFIG:RELEASE>:-O2;-lpthread>")
+
+## use locally:
+ list(APPEND compiler_flags -Wall -Wextra -Wno-unused-parameter -Wno-sign-compare -pedantic)
 
 if (CPLEX_SOURCE_DIR)
 	list(APPEND linker_flags "$<$<CONFIG:DEBUG>:-lpthread;-g>" "$<$<CONFIG:RELEASE>:-flto;-lpthread>")
@@ -54,12 +58,10 @@ include_directories("search")
 include_directories("symbolic_search")
 include_directories("heuristics")
 include_directories("intDataStructures")
-include_directories("translation")
 add_subdirectory(search)
 add_subdirectory(symbolic_search)
 add_subdirectory(heuristics)
 add_subdirectory(intDataStructures)
-add_subdirectory(translation)
 
 
 add_custom_command(
@@ -84,7 +86,6 @@ target_link_libraries(pandaPIengine PUBLIC symbolic_search)
 target_link_libraries(pandaPIengine PUBLIC heuristics)
 target_link_libraries(pandaPIengine PUBLIC hrc)
 target_link_libraries(pandaPIengine PUBLIC hlm)
-target_link_libraries(pandaPIengine PUBLIC translation)
 
 if (BDD)
 	### Build Cudd

@@ -231,7 +231,7 @@ newlyReachedMLMs = new noDelIntSet();
 		delete[] stToMethodNum;
 		delete[] stToMethod;
 
-		delete[] minEstimatedCosts;
+		delete[] minImpliedCosts;
 		delete[] minImpliedDistance;
 	}
 
@@ -628,6 +628,12 @@ newlyReachedMLMs = new noDelIntSet();
 
         searchNode *result = new searchNode;
         result->state = n->state;
+        result->heuristicValue = new int[hLength];
+        result->hPL = new HeuristicPayload * [hLength];
+        for (int i = 0; i < hLength; i++) {
+            result->hPL[i] = nullptr;
+        }
+
         // prepare data structures
         // Beginning of search nodes remains the same
 
@@ -751,6 +757,11 @@ newlyReachedMLMs = new noDelIntSet();
             updateReachability(result);
         }
 
+        if (LMs != nullptr) {
+            result->hPL[ihLM] = LMs->progressLMs(result->numContainedTasks, result->containedTasks, result->state, -1,
+                                                 method, (hhLMPayload *) n->hPL[ihLM]);
+        }
+
         /*if (n->numAbstract > 0) {
             decomposed = result->unconstraintAbstract[0];
         } else {
@@ -782,7 +793,13 @@ newlyReachedMLMs = new noDelIntSet();
 #endif
 
 		searchNode *result = new searchNode;
-		result->state = n->state;
+                result->heuristicValue = new int[hLength];
+                result->hPL = new HeuristicPayload * [hLength];
+        	for (int i = 0; i < hLength; i++) {
+            	result->hPL[i] = nullptr;
+       	 	}	
+
+        	result->state = n->state;
 		// prepare data structures
 		result->numPrimitive = n->numPrimitive + numFirstPrimSubTasks[method];
 		if (result->numPrimitive > 0) {
@@ -1070,6 +1087,10 @@ newlyReachedMLMs = new noDelIntSet();
 		assert(result->nummLMs <= n->nummLMs);
 #endif
 
+        if (LMs != nullptr) {
+            result->hPL[ihLM] = LMs->progressLMs(result->numContainedTasks, result->containedTasks, result->state, -1,
+                                                 method, (hhLMPayload *) n->hPL[ihLM]);
+        }
 		if (progressEffectLess) {
 			for (int ac = effectLess->getFirst(); ac >= 0; ac = effectLess->getNext()) {
 				assert(
@@ -1213,6 +1234,11 @@ newlyReachedMLMs = new noDelIntSet();
 
 	searchNode *Model::apply(searchNode *n, int taskNo) {
 		searchNode *result = new searchNode;
+        result->heuristicValue = new int[hLength];
+        result->hPL = new HeuristicPayload * [hLength];
+        for (int i = 0; i < hLength; i++) {
+            result->hPL[i] = nullptr;
+        }
 
 		// maintain state
 		planStep *progressed = n->unconstraintPrimitive[taskNo];
@@ -1550,7 +1576,12 @@ newlyReachedMLMs = new noDelIntSet();
 		result->reachedmLMs = n->reachedmLMs;
 #endif
 
-		if (progressEffectLess) {
+        if (LMs != nullptr) {
+            result->hPL[ihLM] = LMs->progressLMs(result->numContainedTasks, result->containedTasks, result->state,
+                                                 progressed->task, -1, (hhLMPayload *) n->hPL[ihLM]);
+        }
+
+        if (progressEffectLess) {
 			for (int ac = effectLess->getFirst(); ac >= 0; ac = effectLess->getNext()) {
 				assert(
 						((this->numAdds[result->unconstraintPrimitive[ac]->task] == 0) &&
@@ -2891,10 +2922,10 @@ newlyReachedMLMs = new noDelIntSet();
 		if (maintainTaskReachability != mtrNO) {
 			// reachability
 			int lastMaintained = 0;
-			if (maintainTaskReachability == mtrACTIONS) {
-                lastMaintained = this->numActions;
-			} else if (maintainTaskReachability == mtrALL) {
-                lastMaintained = this->numTasks;
+			if (maintainTaskReachability == mtrALL) {
+				lastMaintained = this->numTasks;
+			} else if (maintainTaskReachability == mtrACTIONS) {
+				lastMaintained = this->numActions;
 			}
 			this->numReachable = new int[numTasks];
 			for (int i = 0; i < numTasks; i++) {
@@ -3060,22 +3091,22 @@ newlyReachedMLMs = new noDelIntSet();
 
 		cout << "- Calculating minimal implied distances and estimated costs";
 
-		this->minEstimatedCosts = new int[this->numTasks];
+		this->minImpliedCosts = new int[this->numTasks];
 		this->minImpliedDistance = new int[this->numTasks];
-		int *minEstimatedCostsM = new int[this->numMethods];
+		int *minImpliedCostsM = new int[this->numMethods];
 		int *minImpliedDistanceM = new int[this->numMethods];
 
 		for (int i = 0; i < this->numMethods; i++) {
-            minEstimatedCostsM[i] = 0;
+			minImpliedCostsM[i] = 0;
 			minImpliedDistanceM[i] = 0;
 		}
 
 		for (int i = 0; i < this->numTasks; i++) {
 			if (i < this->numActions) {
-                minEstimatedCosts[i] = this->actionCosts[i];
+				minImpliedCosts[i] = this->actionCosts[i];
 				minImpliedDistance[i] = 1;
 			} else {
-                minEstimatedCosts[i] = 0;
+				minImpliedCosts[i] = 0;
 				minImpliedDistance[i] = 0;
 			}
 		}
@@ -3095,17 +3126,17 @@ newlyReachedMLMs = new noDelIntSet();
 			tOrMnode *n = h.front();
 			h.pop_front();
 			if (n->isMethod) {
-				int cCosts = minEstimatedCostsM[n->id];
+				int cCosts = minImpliedCostsM[n->id];
 				int cDist = minImpliedDistanceM[n->id];
 
-                minEstimatedCostsM[n->id] = 0;
+				minImpliedCostsM[n->id] = 0;
 				minImpliedDistanceM[n->id] = 1; // a distance of one is implied by the decomposition itself
 				for (int i = 0; i < this->numSubTasks[n->id]; i++) {
 					int st = this->subTasks[n->id][i];
-                    minEstimatedCostsM[n->id] += minEstimatedCosts[st];
+					minImpliedCostsM[n->id] += minImpliedCosts[st];
 					minImpliedDistanceM[n->id] += minImpliedDistance[st];
 				}
-				bool changed = ((minEstimatedCostsM[n->id] != cCosts)
+				bool changed = ((minImpliedCostsM[n->id] != cCosts)
 						|| (minImpliedDistanceM[n->id] != cDist));
 				if (changed) {
 					tOrMnode *nn = new tOrMnode();
@@ -3114,18 +3145,18 @@ newlyReachedMLMs = new noDelIntSet();
 					h.push_back(nn);
 				}
 			} else { // is task
-				int cCosts = minEstimatedCosts[n->id];
+				int cCosts = minImpliedCosts[n->id];
 				int cDist = minImpliedDistance[n->id];
 
-                minEstimatedCosts[n->id] = INT_MAX;
+				minImpliedCosts[n->id] = INT_MAX;
 				minImpliedDistance[n->id] = INT_MAX;
 				for (int i = 0; i < this->numMethodsForTask[n->id]; i++) {
 					int m = this->taskToMethods[n->id][i];
-                    minEstimatedCosts[n->id] = min(minEstimatedCostsM[m], minEstimatedCosts[n->id]);
+					minImpliedCosts[n->id] = min(minImpliedCostsM[m], minImpliedCosts[n->id]);
 					minImpliedDistance[n->id] = min(minImpliedDistanceM[m], minImpliedDistance[n->id]);
 				}
 
-				bool changed = ((minEstimatedCosts[n->id] != cCosts)
+				bool changed = ((minImpliedCosts[n->id] != cCosts)
 						|| (minImpliedDistance[n->id] != cDist));
 				if (changed) {
 					for (int i = 0; i < this->stToMethodNum[n->id]; i++) {
@@ -3139,7 +3170,7 @@ newlyReachedMLMs = new noDelIntSet();
 			}
 			delete n;
 		}
-		delete[] minEstimatedCostsM;
+		delete[] minImpliedCostsM;
 		delete[] minImpliedDistanceM;
 
 		gettimeofday(&tp, NULL);
@@ -3148,198 +3179,369 @@ newlyReachedMLMs = new noDelIntSet();
 		cout << " (" << (currentT - startT) << " ms)" << endl;
 		/*
 		   for (int i = 0 ; i < this->numTasks; i++) {
-		   cout << this->taskNames[i] << " c:" << minEstimatedCosts[i] << " d:" << minImpliedDistance[i] << endl;
+		   cout << this->taskNames[i] << " c:" << minImpliedCosts[i] << " d:" << minImpliedDistance[i] << endl;
 		   }
 		   */
 	}
 
+    string sasCleanStr(string s) {
+        std::string str = s;
+        std::replace(str.begin(), str.end(), '[', '(');
+        std::replace(str.begin(), str.end(), ']', ')');
+
+        if (str == "none-of-them") {
+            return "<none of those>";
+        }
+        if (str == "bur___noop") {
+            return "bur___noop()";
+        }
+        return str;
+    }
+
+    bool Model::getSASVal(int *store, int *somelist, int length) {
+        bool result = false;
+        for (int j = 0; j < length; j++) {
+            int val = somelist[j];
+            int var = 0;
+            while (!((this->firstIndex[var] <= val) && (this->lastIndex[var] >= val)))
+                var++;
+            if (store[var] != -1) {
+                result = true;
+            }
+            store[var] = val - this->firstIndex[var];
+        }
+        return result;
+    }
+
+    void Model::getSASRepresentation(vector<bool> &isBoolean, int **prev, int *numPrev, int **eff, int *numEff) {
+        int* varPrec = new int[this->numVars];
+        int* varAdd = new int[this->numVars];
+        int* varDel = new int[this->numVars];
+        for (int i = 0; i < this->numVars; i++) {
+            varPrec[i] = -1;
+            varAdd[i] = -1;
+            varDel[i] = -1;
+        }
+
+        vector<int> prevail;
+        vector<int> effect;
+        for(int a = 0; a < this->numActions; a++) {
+            // generate FD's SAS+ format
+            if (getSASVal(varPrec, this->precLists[a], this->numPrecs[a])) {
+                cout << "error: two values of same sas+ variable are in precondition of action " << this->taskNames[a]
+                     << endl;
+                exit(-1);
+            }
+            if (getSASVal(varAdd, this->addLists[a], this->numAdds[a])) {
+                cout << "error: two values of same sas+ variable are in effect of action " << this->taskNames[a]
+                     << endl;
+                exit(-1);
+            }
+            getSASVal(varDel, this->delLists[a], this->numDels[a]);
+            prevail.clear();
+            effect.clear();
+            for (int v = 0; v < this->numVars; v++) {
+                if (isBoolean[v]) {
+                    if (varPrec[v] != -1) {
+                        if (varAdd[v] != -1) { // prevail constraint
+                            assert(varPrec[v] == varAdd[v]);
+                            prevail.push_back(v);
+                            prevail.push_back(varPrec[v]);
+                        } else if (varDel[v] != -1) {
+                            // this value is deleted -> need to set it to <none of those>
+                            effect.push_back(0); // not conditional
+                            effect.push_back(v);
+                            assert(varPrec[v] == 0);
+                            effect.push_back(0); // value needed before
+                            effect.push_back(1); // value the variable is set to
+                        } else { // prevail constraint
+                            assert (varAdd[v] == -1);
+                            assert (varDel[v] == -1);
+                            prevail.push_back(v);
+                            prevail.push_back(varPrec[v]);
+                        }
+                    } else { // prec not set
+                        if (varAdd[v] != -1) { // added
+                            effect.push_back(0); // not conditional
+                            effect.push_back(v);
+                            effect.push_back(-1); // value needed before -> do not care
+                            assert(varAdd[v] == 0);
+                            effect.push_back(0); // value the variable is set to
+                        } else if (varDel[v] != -1) {
+                            // this value is deleted -> need to set it to <none of those>
+                            effect.push_back(0); // not conditional
+                            effect.push_back(v);
+                            effect.push_back(-1); // value needed before -> do not care
+                            effect.push_back(1); // value the variable is set to
+                        }
+                    }
+                } else { // is sas+ variable
+                    if ((varPrec[v] != -1) && (varAdd[v] == -1)) {
+                        // prevail constraint
+                        prevail.push_back(v);
+                        prevail.push_back(varPrec[v]);
+                    } else if ((varPrec[v] != -1) && (varAdd[v] != -1)) {
+                        if (varPrec[v] == varAdd[v]) { // this is actually a prevail constraint
+                            prevail.push_back(v);
+                            prevail.push_back(varPrec[v]);
+                        } else {
+                            effect.push_back(0); // not conditional
+                            effect.push_back(v);
+                            effect.push_back(varPrec[v]); // value needed before
+                            effect.push_back(varAdd[v]); // value the variable is set to
+                        }
+                    } else if ((varPrec[v] == -1) && (varAdd[v] != -1)) {
+                        effect.push_back(0); // not conditional
+                        effect.push_back(v);
+                        effect.push_back(-1); // value needed before
+                        effect.push_back(varAdd[v]); // value the variable is set to
+                    } else if ((varPrec[v] != -1) || (varDel[v] != -1) || (varDel[v] != -1)) {
+                        cout << "unexpected sas+ values in action:\n";
+                        cout << "prec " << varPrec[v] << "\n";
+                        cout << "add  " << varAdd[v] << "\n";
+                        cout << "del  " << varDel[v] << "\n";
+                        exit(-1);
+                    }
+                }
+                varPrec[v] = -1;
+                varAdd[v] = -1;
+                varDel[v] = -1;
+            }
+            numPrev[a] = prevail.size();
+            prev[a] = new int[prevail.size()];
+            for(int i = 0; i < prevail.size(); i++) {
+                prev[a][i] = prevail[i];
+            }
+            numEff[a] = effect.size();
+            eff[a] = new int[effect.size()];
+            for(int i = 0; i < effect.size(); i++) {
+                eff[a][i] = effect[i];
+            }
+        }
+    }
+
+    void Model::writeToFDFormat(string fName) {
+        // clean strings
+        for (int i = 0; i < this->numStateBits; i++) {
+            factStrs[i] = sasCleanStr(factStrs[i]);
+        }
+        for (int i = 0; i < this->numActions; i++) {
+            taskNames[i] = sasCleanStr(taskNames[i]);
+        }
+
+        ofstream os;
+        os.open(fName);
+        os << "begin_version\n";
+        os << "3\n";
+        os << "end_version\n";
+        os << "begin_metric\n";
+        os << "0\n";
+        os << "end_metric\n";
+
+        vector<bool> isBoolean;
+        for (int i = 0; i < this->numVars; i++) {
+            isBoolean.push_back(this->lastIndex[i] == this->firstIndex[i]);
+        }
+
+        os << this->numVars << "\n"; // number of variables
+        for (int i = 0; i < this->numVars; i++) {
+            os << "begin_variable\n";
+            os << "var" << i << "\n";
+            os << "-1\n"; // axiom layer
+            if (isBoolean[i]) {
+                os << "2\n";
+                os << "Atom " << this->factStrs[this->firstIndex[i]] << "\n";
+                os << "NegatedAtom " << this->factStrs[this->firstIndex[i]] << "\n";
+            } else {
+                os << (this->lastIndex[i] - this->firstIndex[i] + 1) << "\n";
+                for (int j = this->firstIndex[i]; j <= this->lastIndex[i]; j++) {
+                    string atom = this->factStrs[j];
+                    if (atom != "<none of those>") {
+                        os << "Atom ";
+                    }
+                    os << atom << "\n";
+                }
+            }
+            os << "end_variable\n";
+        }
+
+        // mutex groups
+        os << "0\n";
+
+        // initial state
+        os << "begin_state\n";
+        vector<int> s0;
+        for (int i = 0; i < this->numVars; i++) {
+            s0.push_back(-1);
+        }
+        for (int i = 0; i < this->s0Size; i++) {
+            int val = this->s0List[i];
+            int var = 0;
+            while (!((this->firstIndex[var] <= val) && (this->lastIndex[var] >= val)))
+                var++;
+            if (s0[var] != -1) {
+                cout << "error: two values of same sas+ variable are set in s0\n";
+                exit(-1);
+            }
+            s0[var] = val - this->firstIndex[var];
+        }
+        for (int i = 0; i < this->numVars; i++) {
+            if (s0[i] == -1) {
+                if (isBoolean[i]) { // it is not set -> set to <none of those>
+                    s0[i] = 1;
+                } else {
+                    cout << "error: non-boolean variable not set in s0\n";
+                    exit(-1);
+                }
+            }
+        }
+        for (int i = 0; i < this->numVars; i++) {
+            os << s0[i] << "\n";
+        }
+        os << "end_state\n";
+
+        // write goal definition
+        os << "begin_goal\n";
+        os << this->gSize << "\n";
+        for (int i = 0; i < this->gSize; i++) {
+            int val = this->gList[i];
+            int var = 0;
+            while (!((this->firstIndex[var] <= val) && (this->lastIndex[var] >= val)))
+                var++;
+            os << var << " " << (val - this->firstIndex[var]) << "\n";
+        }
+        os << "end_goal\n";
+
+
+        // generate SAS+ representation
+        int **prev = new int *[this->numActions];
+        int *numPrev = new int[this->numActions];
+        int **eff = new int *[this->numActions];
+        int *numEff = new int[this->numActions];
+
+        // todo: this takes too long -> optimize
+        getSASRepresentation(isBoolean, prev, numPrev, eff, numEff);
+
+        os << this->numActions << "\n";
+        // write actions
+        for (int a = 0; a < this->numActions; a++) {
+            // write everything
+            int numPrevail = numPrev[a] / 2;
+            int numEffect = (numEff[a] / 4);
+
+            os << "begin_operator\n";
+            os << this->taskNames[a] << "\n";
+            os << numPrevail << "\n";
+            for (int j = 0; j < numPrev[a]; j += 2) {
+                os << prev[a][j] << " " << prev[a][j + 1] << "\n";
+            }
+            os << numEffect << "\n";
+            for (int j = 0; j < numEff[a]; j += 4) {
+                os << eff[a][j] << " " << eff[a][j + 1] << " " << eff[a][j + 2] << " " << eff[a][j + 3] << "\n";
+            }
+            os << 1 << "\n"; // action costs, 0 means unicosts
+            os << "end_operator\n";
+        }
+        os << 0 << "\n";
+        os.close();
+    }
+
 	void Model::writeToPDDL(string dName, string pName) {
 		ofstream dfile;
 		dfile.open(dName);
-		dfile << "(define (domain rc)" << endl;
+		dfile << "(define (domain rc)\n";
 		dfile << "  (:predicates ";
 		for (int i = 0; i < this->numStateBits; i++) {
-			dfile << "(" << su.cleanStr(this->factStrs[i]) << ")" << endl;
+			dfile << "(" << su.cleanStr(this->factStrs[i]) << ")\n";
 			if (i < this->numStateBits - 1)
 				dfile << "               ";
 		}
-		dfile << "  )" << endl << endl;
+		dfile << "  )\n\n";
 
 		for (int i = numActions; i < numTasks; i++) {
 			dfile << "  (:task " << su.cleanStr(this->taskNames[i]);
-			dfile << " :parameters ())" << endl;
+			dfile << " :parameters ())\n";
 		}
-		dfile << endl;
-		
-		vector<bool> actionOccurs(this->numActions); // initialised to false
+		dfile << "\n";
 
 		for (int i = 0; i < numMethods; i++) {
-			int possibleMethodPrecondition = -1;
+			dfile << "  (:method " << su.cleanStr(this->methodNames[i]) << "_" << i << "\n";
+			dfile << "     :parameters ()\n";
+			dfile << "     :task (" << su.cleanStr(this->taskNames[this->decomposedTask[i]]) << ")\n";
+			dfile << "     :subtasks (and\n";
 			for (int j = 0; j < numSubTasks[i]; j++) {
-				if (taskNames[subTasks[i][j]].rfind("__method_precondition", 0) == 0){
-					if (possibleMethodPrecondition != -1){
-						possibleMethodPrecondition = -2;
-						break;
-					}
-
-					possibleMethodPrecondition = j;
-				}
+				dfile << "        (task" << j << " (" << su.cleanStr(taskNames[subTasks[i][j]]) << "))\n";
 			}
+			dfile << "     )\n";
 
-			if (possibleMethodPrecondition >= 0){
-				map<int,vector<int>> succs;
+			if (this->numOrderings[i]) {
+				dfile << "     :ordering (and\n";
+
 				int j = 0;
 				while (j < this->numOrderings[i]) {
-					succs[this->ordering[i][j]].push_back(this->ordering[i][j + 1]);
+					dfile << "        (task" << this->ordering[i][j] << " < task" << this->ordering[i][j + 1] << ")"
+						<< "\n";
 					j += 2;
 				}
-				
-				set<int> allSuccessors;
-				stack<int> cur;
-				cur.push(possibleMethodPrecondition);
-
-				while (cur.size()){
-					int c = cur.top(); cur.pop();
-					allSuccessors.insert(c);
-					for (int x : succs[c])
-						if (allSuccessors.count(x) == 0)
-							cur.push(x);
-				}
-
-				if (allSuccessors.size() != numSubTasks[i])
-					possibleMethodPrecondition = -1; // not the first task, no not possible to write as precondition
+				dfile << "     )\n";
 			}
 
-			
-
-
-			dfile << "  (:method " << su.cleanStr(this->methodNames[i]) << "_" << i << endl;
-			dfile << "     :parameters ()" << endl;
-			dfile << "     :task (" << su.cleanStr(this->taskNames[this->decomposedTask[i]]) << ")" << endl;
-			if (possibleMethodPrecondition >= 0){
-				int preconditionTask = subTasks[i][possibleMethodPrecondition];
-				
-				dfile << "     :precondition (and " << endl;
-				for (int j = 0; j < this->numPrecs[preconditionTask]; j++) {
-					dfile << "         (" << su.cleanStr(this->factStrs[this->precLists[preconditionTask][j]]) << ")" << endl;
-				}
-				dfile << "     )" << endl;
-			}
-
-			if (methodIsTotallyOrdered[i]){
-				dfile << "     :ordered-subtasks (and" << endl;
-				for (int k = 0; k < numSubTasks[i]; k++) {
-					int j = methodTotalOrder[i][k];
-					if (j == possibleMethodPrecondition) continue;
-					// don't output no-op actions again.
-					if (taskNames[subTasks[i][j]].rfind("__noop", 0) == 0) continue;
-					
-					
-					if (subTasks[i][j] < this->numActions)
-						actionOccurs[subTasks[i][j]] = true;
-					dfile << "        (" << su.cleanStr(taskNames[subTasks[i][j]]) << ")" << endl;
-				}
-				dfile << "     )" << endl;
-
-
-
-			} else {
-				set<int> noopIDs;
-				dfile << "     :subtasks (and" << endl;
-				for (int j = 0; j < numSubTasks[i]; j++) {
-					if (j == possibleMethodPrecondition) continue;
-					// don't output no-op actions again.
-					if (taskNames[subTasks[i][j]].rfind("__noop", 0) == 0) {
-						noopIDs.insert(j);
-						continue;
-					}
-					if (subTasks[i][j] < this->numActions)
-						actionOccurs[subTasks[i][j]] = true;
-					dfile << "        (task" << j << " (" << su.cleanStr(taskNames[subTasks[i][j]]) << "))" << endl;
-				}
-				dfile << "     )" << endl;
-
-
-				if (this->numOrderings[i]) {
-
-					int j = 0;
-					bool firstOrdering = true;
-					while (j < this->numOrderings[i]) {
-						if (this->ordering[i][j] == possibleMethodPrecondition || noopIDs.count(this->ordering[i][j]) || noopIDs.count(this->ordering[i][j] + 1) ) {
-							j+=2;
-							continue;
-						}
-						if (firstOrdering) {
-							dfile << "     :ordering (and" << endl;
-							firstOrdering = false;
-						}
-						
-						
-						dfile << "        (task" << this->ordering[i][j] << " < task" << this->ordering[i][j + 1] << ")"
-							<< endl;
-						j += 2;
-					}
-					if (!firstOrdering) dfile << "     )" << endl;
-				}
-			}
-
-			dfile << "  )" << endl;
+			dfile << "  )\n";
 		}
-		dfile << endl;
+		dfile << "\n";
 
 		for (int i = 0; i < this->numActions; i++) {
-			if (!actionOccurs[i]) continue; // don't output method precondition actions.
-			dfile << "  (:action " << su.cleanStr(this->taskNames[i]) << endl;
-			dfile << "     :parameters ()" << endl;
+			dfile << "  (:action " << su.cleanStr(this->taskNames[i]) << "\n";
+			dfile << "     :parameters ()\n";
 			if (this->numPrecs[i]) {
-				dfile << "     :precondition (and " << endl;
+				dfile << "     :precondition (and \n";
 				for (int j = 0; j < this->numPrecs[i]; j++) {
-					dfile << "         (" << su.cleanStr(this->factStrs[this->precLists[i][j]]) << ")" << endl;
+					dfile << "         (" << su.cleanStr(this->factStrs[this->precLists[i][j]]) << ")\n";
 				}
-				dfile << "     )" << endl;
+				dfile << "     )\n";
 			}
 			if (this->numAdds[i] + this->numDels[i]) {
-				dfile << "     :effect (and " << endl;
+				dfile << "     :effect (and \n";
 				for (int j = 0; j < this->numAdds[i]; j++) {
-					dfile << "         (" << su.cleanStr(this->factStrs[this->addLists[i][j]]) << ")" << endl;
+					dfile << "         (" << su.cleanStr(this->factStrs[this->addLists[i][j]]) << ")\n";
 				}
 				for (int j = 0; j < this->numDels[i]; j++) {
-					dfile << "         (not(" << su.cleanStr(this->factStrs[this->delLists[i][j]]) << "))" << endl;
+					dfile << "         (not(" << su.cleanStr(this->factStrs[this->delLists[i][j]]) << "))\n";
 				}
-				dfile << "     )" << endl;
+				dfile << "     )\n";
 			}
-			dfile << "  )" << endl;
+			dfile << "  )\n";
 			if (i < this->numActions - 1)
-				dfile << endl;
+				dfile << "\n";
 		}
-		dfile << ")" << endl;
+		dfile << ")\n";
 		dfile.close();
 
 		ofstream pfile;
 		pfile.open(pName);
-		pfile << "(define (problem p)" << endl;
-		pfile << "   (:domain rc)" << endl;
+		pfile << "(define (problem p)\n";
+		pfile << "   (:domain rc)\n";
 
 		if (this->isHtnModel) {
-			pfile << "   (:htn :parameters ()" << endl;
-			pfile << "      :subtasks (and" << endl;
-			pfile << "         (" << su.cleanStr(taskNames[this->initialTask]) << ")" << endl;
-			pfile << "      )" << endl;
-			pfile << "   )" << endl;
+			pfile << "   (:htn :parameters ()\n";
+			pfile << "      :subtasks (and\n";
+			pfile << "         (" << su.cleanStr(taskNames[this->initialTask]) << ")\n";
+			pfile << "      )\n";
+			pfile << "   )\n";
 		}
-		pfile << "   (:init" << endl;
+		pfile << "   (:init\n";
 		for (int i = 0; i < this->s0Size; i++) {
-			pfile << "      (" << su.cleanStr(this->factStrs[this->s0List[i]]) << ")" << endl;
+			pfile << "      (" << su.cleanStr(this->factStrs[this->s0List[i]]) << ")\n";
 		}
-		pfile << "   )" << endl;
+		pfile << "   )\n";
 		if (this->gSize) {
-			pfile << "   (:goal (and" << endl;
+			pfile << "   (:goal (and\n";
 			for (int i = 0; i < this->gSize; i++) {
-				pfile << "      (" << su.cleanStr(this->factStrs[this->gList[i]]) << ")" << endl;
+				pfile << "      (" << su.cleanStr(this->factStrs[this->gList[i]]) << ")\n";
 			}
-			pfile << "   ))" << endl;
+			pfile << "   ))\n";
 		}
-		pfile << ")" << endl;
+		pfile << ")\n";
 		pfile.close();
 	}
 	}

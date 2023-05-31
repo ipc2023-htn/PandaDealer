@@ -16,29 +16,39 @@
 #include "../../../Model.h"
 #include "../../../intDataStructures/StringUtil.h"
 #include "../../rcHeuristics/RCModelFactory.h"
+#include "lmGraph.h"
+#include "../hhLmConstDef.h"
 
 namespace progression {
+
+enum lmFactoryType {rhw, ao1, ao2, nativeAO, localLMs, lmCutLMs, lmCutLMrecomp, lmDof};
 
 class LmFdConnector {
 public:
 	LmFdConnector();
 	virtual ~LmFdConnector();
 
-	void createLMs(Model* htn);
+    lmGraph* createLMs(Model* htn, lmFactoryType lmf, bool useOrderings);
 
-	int numLMs = -1;
-	int numConjunctive = -1;
-	landmark** landmarks = nullptr;
+//	int numLMs = -1;
+//	int numConjunctive = -1;
+//	landmark** landmarks = nullptr;
 
-	int getNumLMs();
-	landmark** getLMs();
+//	int getNumLMs();
+//	landmark** getLMs();
+    void printDOT(progression::Model *pModel, lmGraph* g);
+    string toString2(Model *m, lmNode &lms);
 
 private:
 	StringUtil su;
 
-	void readFDLMs(string f, RCModelFactory* factory);
-	int getIndex(string f, Model* rc);
-};
+    lmGraph* readFDLMs(string f, RCModelFactory* factory, bool useOrderings);
+//	int getIndex(string f, Model* rc);
+    string revertRenaming(string s);
+    Model *htn;
+
+        int getNodeID(string &basicString);
+    };
 
 } /* namespace progression */
 

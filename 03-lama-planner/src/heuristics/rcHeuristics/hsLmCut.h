@@ -39,6 +39,7 @@ public:
 	//list<LMCutLandmark*> cuts;
     list<LMCutLandmark *>* cuts = new list<LMCutLandmark *>();
 
+    bool storeCuts = false;
 private:
 	IntUtil iu;
 	int getHMax(bucketSet& s, noDelIntSet& g);
@@ -51,9 +52,7 @@ private:
 	bucketSet* cut;
 	bucketSet* precsOfCutNodes;
 
-	const bool storeCuts = true;
-
-	// hMax stuff
+    // hMax stuff
 	IntPairHeap<int>* heap;
 	int* hValInit;
 

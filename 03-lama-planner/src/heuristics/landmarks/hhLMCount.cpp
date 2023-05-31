@@ -106,7 +106,11 @@ hhLMCount::hhLMCount(Model* htn, int index, searchNode *tnI, lmFactory typeOfFac
 	} else if(typeOfFactory == lmfFD) {
 		cout << "- using FD landmark extraction" << endl;
 		LmFdConnector FDcon;
-		FDcon.createLMs(htn);
+		lmGraph *g = FDcon.createLMs(htn, rhw, true);
+        htn->LMs = g;
+        tnI->hPL = new HeuristicPayload*[1];
+        tnI->hPL[0] = g->initLM(tnI->numContainedTasks, tnI->containedTasks, tnI->state);
+
 //		tnI->numLMs = FDcon.getNumLMs();
 //		tnI->lms = FDcon.getLMs();
 	} else {

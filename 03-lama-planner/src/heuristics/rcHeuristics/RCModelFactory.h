@@ -19,10 +19,10 @@ public:
 	RCModelFactory(Model* htn);
 	virtual ~RCModelFactory();
 	Model* getRCmodelSTRIPS();
-	Model* getRCmodelSTRIPS(int costsMethodActions, int costRegularActions);
+	Model* getRCmodelSTRIPS(int costsMethodActions, bool useTDR);
 	void createInverseMappings(Model* c);
 	int t2tdr(int task);
-	int t2bur(int task);
+	int t2bur(int task, bool useTDR);
 
 	pair<int, int> rcStateFeature2HtnIndex(string s);
 

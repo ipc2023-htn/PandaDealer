@@ -6,9 +6,13 @@
 #define PANDAPIENGINE_HHLMPAYLOAD_H
 
 #include "../HeuristicPayload.h"
+#include <vector>
 
-class hhLMPayload : HeuristicPayload {
+using namespace std;
 
+class hhLMPayload : public HeuristicPayload {
+public:
+    vector<bool> fulfilled;
 };
 
 

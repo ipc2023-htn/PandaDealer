@@ -37,6 +37,8 @@ public:
 
 	void prettyPrintGraph();
 
+    void prettyLMs();
+
 private:
 	Model* htn = nullptr;
 	int fNode(int i);

@@ -1,4 +1,3 @@
-
 //
 // Created by dh on 10.03.20.
 //
@@ -22,6 +21,15 @@ enum eEstimate {
     estDISTANCE, estMIXED, estCOSTS
 };
 
+
+class hhHAPayload : public HeuristicPayload {
+public:
+    bool reachedByHA = false;
+    int numHAs = 0;
+    int* HAs;
+    bool triggerBoost = false;
+};
+
 template<class ClassicalHeuristic>
 class hhRC2 : public Heuristic {
 private:
@@ -29,15 +37,14 @@ private:
     noDelIntSet intSet;
     bucketSet s0set;
     RCModelFactory *factory;
-    bool storeCuts = true;
     IntUtil iu;
     const eEstimate estimate = estDISTANCE;
     const bool correctTaskCount = true;
-
-    bool useAdmissibleCostEstimate = false;
+    int bestSeenhVal = INT_MAX;
 
 public:
     ClassicalHeuristic *sasH;
+    bool storeCuts = false;
     list<LMCutLandmark *>* cuts = new list<LMCutLandmark *>();
 	
     hhRC2(Model *htnModel, int index, eEstimate estimate, bool correctTaskCount) : Heuristic(htnModel, index),
@@ -46,56 +53,27 @@ public:
 
         Model *heuristicModel;
         factory = new RCModelFactory(htnModel);
-		// two weird things:
-		// 1. the model may contain artificial actions (for method preconditions), which always have cost 0
-		// If we estimate the distance, we may want to count them.
-		// 2. the original, non-artificial actions may have costs > 1 and for distance we might not want to count them as something > 1
-
-		// the first argument controls the cost of method actions
-		// 0: all have cost 0
-		// 1: all have cost 1
-		// the second argument controls the cost of the primitive actions
-		// 0: keep the costs of the input model (including the weird things mentioned above)
-		// 1: set the costs of all actions to 1
         if (estimate == estCOSTS) {
-			cout << "Generate 1" << endl << endl;
-            heuristicModel = factory->getRCmodelSTRIPS(0,0); // costs of methods need to be zero
-        } else if (estimate == estMIXED){
-			cout << "Generate 2" << endl << endl;
-            heuristicModel = factory->getRCmodelSTRIPS(1,0); // estimate distance -> method costs 1, actions keep their costs
-        } else if (estimate == estDISTANCE){
-			cout << "Generate 3" << endl << endl;
-            heuristicModel = factory->getRCmodelSTRIPS(1,1); // estimate distance -> method costs 1, actions costs 1
+            heuristicModel = factory->getRCmodelSTRIPS(0, true); // costs of methods need to be zero
         } else {
-			cout << "BLUUUUUP";
-			exit(0);
-		}
-
+            heuristicModel = factory->getRCmodelSTRIPS(1, true); // estimate distance -> method costs 1
+            // fixme: this configuration is wired when actions have actual costs
+        }
 
         this->sasH = new ClassicalHeuristic(heuristicModel);
         this->s0set.init(heuristicModel->numStateBits);
         this->gset.init(heuristicModel->numStateBits);
         this->intSet.init(heuristicModel->numStateBits);
 
-        if (typeid(ClassicalHeuristic) == typeid(hsLmCut)) {
-            useAdmissibleCostEstimate = (correctTaskCount && (estimate == estCOSTS));
-            if (useAdmissibleCostEstimate) {
-                cout << "- a combination of cost estimate and admissible heuristic is used -> using admissible correction of heuristic value (this is bad when you do not want to find optimal plans)." << endl;
-            }
-        }
         if (storeCuts) {
             if (typeid(ClassicalHeuristic) != typeid(hsLmCut)) {
-                useAdmissibleCostEstimate = (correctTaskCount && (estimate == estCOSTS));
-                if (useAdmissibleCostEstimate) {
-                    cout << "- a combination of cost estimate and admissible heuristic is used -> using admissible correction of heuristic value (this is bad when you do not want to find optimal plans).";
-                }
                 storeCuts = false;
                 cout
                         << "- the option \"store cuts\" of the RC heuristic can only be used with the inner heuristic LM-Cut. It will be disabled."
                         << endl;
 			}
 		}
-		if (correctTaskCount && !useAdmissibleCostEstimate) {
+		if (correctTaskCount) {
 			htnModel->calcMinimalImpliedX();
         }
     }
@@ -105,27 +83,52 @@ public:
     }
 	
 	string getDescription(){
-		return "hhRC2("	+ sasH->getDescription() + ";" +
-			(estimate == estDISTANCE?"distance":(estimate == estCOSTS?"cost":"mixed"))
-		   	+ ";" + (correctTaskCount?"correct count":"") + ")";
+		return "hhRC2("	+ sasH->getDescription() + ";" + (estimate == estDISTANCE?"distance":"cost") + ";" + (correctTaskCount?"correct count":"") + ")";
 	}
 
     void setHeuristicValue(searchNode *n, searchNode *parent, int action) override {
-        n->heuristicValue[index] = this->setHeuristicValue(n);
-        if (n->goalReachable) {
-            n->goalReachable = (n->heuristicValue[index] != UNREACHABLE);
-        }
+        doFFStuff(n, parent, action);
     }
 
     void setHeuristicValue(searchNode *n, searchNode *parent, int absTask, int method) override {
-        n->heuristicValue[index] = this->setHeuristicValue(n);
-        if (n->goalReachable) {
+        doFFStuff(n, parent, method + htn->numActions);
+    }
+
+    void doFFStuff(searchNode *n, searchNode *parent, int appliedOperator) {
+        const bool needPayload = (deferredComputation || (helpfulActions != none));
+        if (needPayload) {
+            hhHAPayload *myPayload = new hhHAPayload();
+            n->hPL[index] = myPayload;
+            hhHAPayload *parentPayload = (hhHAPayload *) parent->hPL[index];
+            if (deferredComputation) {
+                if (parentPayload->ownHVal < 0) {
+                    parentPayload->ownHVal = setHeuristicValue(parent);
+                }
+                n->heuristicValue[index] = parentPayload->ownHVal;
+            } else {
+                myPayload->ownHVal = setHeuristicValue(n); // not really needed in this case
+                n->heuristicValue[index] = myPayload->ownHVal;
+            }
+            if (helpfulActions != none) {
+                myPayload->reachedByHA = iu.containsInt(parentPayload->HAs, 0, parentPayload->numHAs - 1, appliedOperator);
+            }
+            myPayload->triggerBoost = (n->heuristicValue[index] < bestSeenhVal);
+        } else {
+            // no deferred computation, no helpful actions
+            n->heuristicValue[index] = setHeuristicValue(n);
+        }
+        if (n->goalReachable) { // only do if still reachable
             n->goalReachable = (n->heuristicValue[index] != UNREACHABLE);
+        }
+        if (n->heuristicValue[index] < bestSeenhVal) {
+            bestSeenhVal = n->heuristicValue[index]; // if deferred, this is actually the parents value
+            cout << "Found new best " << sasH->getDescription() << " value: " << bestSeenhVal << endl;
         }
     }
 
 
     int setHeuristicValue(searchNode *n) {
+        calculated++;
         int hval = 0;
 
         // get facts holding in s0
@@ -162,10 +165,29 @@ public:
 
         for (int i = 0; i < n->numContainedTasks; i++) {
             int t = n->containedTasks[i];
-            gset.insert(factory->t2bur(t));
+            gset.insert(factory->t2bur(t, true));
         }
 
         hval = this->sasH->getHeuristicValue(s0set, gset);
+        if (helpfulActions != none) {
+            hsAddFF * hFF = ((hsAddFF * ) this->sasH);
+            hhHAPayload* payload = (hhHAPayload*)n->hPL[index];
+            payload->HAs = new int[hFF->markedOps.getSize()];
+            payload->numHAs = 0;
+            int i = 0;
+            for (int op = hFF->markedOps.getFirst(); op >= 0; op = hFF->markedOps.getNext()) {
+                if ((helpfulActions == onlyActions) && (op < htn->numActions)) {
+                    payload->HAs[i++] = op;
+                } else if ((helpfulActions == onlyMethods) && (op >= htn->numActions)) {
+                    payload->HAs[i++] = op;
+                } else if (helpfulActions == all) {
+                    payload->HAs[i++] = op;
+                }
+            }
+            payload->numHAs = i;
+            assert(i == payload->numHAs);
+            iu.sort(payload->HAs, 0, payload->numHAs - 1); // will be used for search later on -> sort
+        }
 
         // the indices of the methods need to be transformed to fit the scheme of the HTN model (as opposed to the rc model)
         if ((storeCuts) && (hval != UNREACHABLE)) {
@@ -231,14 +253,10 @@ public:
                         int task = n->containedTasks[i];
                         int count = n->containedTaskCount[i];
                         assert(task < htn->numTasks);
-                        if (useAdmissibleCostEstimate) {
-                            if (task < htn->numActions) {
-                                hval += (htn->actionCosts[task] * (count - 1));
-                            }
-                        } else if (estimate == estDISTANCE) {
+						if (estimate == estDISTANCE) {
                             hval += (htn->minImpliedDistance[task] * (count - 1));
                         } else if (estimate == estCOSTS) {
-                            hval += (htn->minEstimatedCosts[task] * (count - 1));
+                            hval += (htn->minImpliedCosts[task] * (count - 1));
                         }
                     }
                 }

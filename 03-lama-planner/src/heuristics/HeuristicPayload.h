@@ -7,7 +7,8 @@
 
 
 class HeuristicPayload {
-
+public:
+    int ownHVal = -1;
 };
 
 

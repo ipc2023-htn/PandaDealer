@@ -46,6 +46,8 @@ namespace progression {
         Model *m;
         myHeu heuristic = sasFF;
         list<LMCutLandmark *>* cuts = new list<LMCutLandmark *>();
+
+        noDelIntSet markedOps;
     private:
         // todo: when parallelized, this must be per core
         IntPairHeap<hType> *queue;
@@ -57,7 +59,6 @@ namespace progression {
         int *reachedBy;
 
         noDelIntSet markedFs;
-        noDelIntSet markedOps;
         IntStack needToMark;
 
         bool allActionsCostOne = false;

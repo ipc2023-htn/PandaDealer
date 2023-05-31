@@ -18,7 +18,7 @@ LMsInAndOrGraphs::LMsInAndOrGraphs(Model* htn) {
 	bool loopback = false;
 	this->htn = htn;
 
-	if(!loopback)
+	if (!loopback)
 		numNodes = htn->numStateBits + htn->numTasks + htn->numMethods;
 	else
 		numNodes = htn->numStateBits + htn->numTasks + htn->numMethods + htn->numActions;
@@ -114,8 +114,10 @@ void LMsInAndOrGraphs::prettyPrintGraph() {
 		cout << "    n" << i << "[";
 		if(nodeType[i] == tAND) {
 			cout << "shape=box";
-		} else if(nodeType[i] == tOR) {
-			cout << "shape=circle";
+        } else if(nodeType[i] == tOR) {
+            cout << "shape=ellipse";
+        } else {
+            cout << "shape=hexagon";
 		}
 		cout << ", ";
 
@@ -517,6 +519,19 @@ landmark** LMsInAndOrGraphs::getLMs(){
 	}
 	assert(i == this->getNumLMs());
 	return lms;
+}
+
+void LMsInAndOrGraphs::prettyLMs() {
+    cout << "Found " << getNumLMs() << " landmarks:" << endl;
+    for (int f: *flm) {
+        cout << "- fact lm: " << htn->factStrs[f] << endl;
+    }
+    for (int t: *tlm) {
+        cout << "- task/action lm: " << htn->taskNames[t] << endl;
+    }
+    for (int m: *mlm) {
+        cout << "- method lm: " << htn->methodNames[m] << endl;
+    }
 }
 
 

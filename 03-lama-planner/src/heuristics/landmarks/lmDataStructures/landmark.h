@@ -8,10 +8,9 @@
 #ifndef HEURISTICS_LANDMARKS_LMDATASTRUCTURES_LANDMARK_H_
 #define HEURISTICS_LANDMARKS_LMDATASTRUCTURES_LANDMARK_H_
 
-namespace progression {
+#include "landmarks/hhLmConstDef.h"
 
-enum lmConType {atom, conjunctive, disjunctive};
-enum lmType {fact, METHOD, task, LMCUT};
+namespace progression {
 
 class landmark {
 public:

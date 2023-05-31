@@ -128,10 +128,15 @@ namespace progression {
 
         void setHeuristicValue(searchNode *n, searchNode *parent, int action) override;
 
-        void setHeuristicValue(searchNode *n, searchNode *parent, int absTask,
-                               int method) override;
+        void setHeuristicValue(searchNode *n, searchNode *parent, int absTask, int method) override;
 
         void printHeuristicInformation();
+
+        unordered_map<int, int> doNotUseTasks;
+        unordered_map<int, int> doNotUseMethods;
+
+        unordered_map<int, int> containedTasks;
+        unordered_map<int, int> containedMethods;
 
     private:
         const int largeC = 100;

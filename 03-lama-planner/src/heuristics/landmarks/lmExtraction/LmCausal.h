@@ -22,6 +22,8 @@ namespace progression {
 
         void calcLMs(searchNode *n);
 
+        lmGraph* calcLMs();
+
         void prettyprintAndOrGraph();
 
         // generated landmarks

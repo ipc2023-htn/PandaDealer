@@ -22,6 +22,7 @@
 #include "intDataStructures/FlexIntStack.h"
 #include "intDataStructures/IntUtil.h"
 #include "intDataStructures/StringUtil.h"
+#include "landmarks/lmExtraction/lmGraph.h"
 
 using namespace std;
 
@@ -209,7 +210,7 @@ namespace progression {
 			bool taskReachable(searchNode* tn, int t);
 #endif
 
-			int *minEstimatedCosts = nullptr;
+			int *minImpliedCosts = nullptr;
 			int *minImpliedDistance = nullptr;
 
 			void calcMinimalImpliedX();
@@ -245,6 +246,9 @@ namespace progression {
 			int **reachable = nullptr;
 
 			void writeToPDDL(string dName, string pName);
+			void writeToFDFormat(string fName);
+            void getSASRepresentation(vector<bool> &isBoolean, int **prev, int *numPrev, int **eff, int *numEff);
+            bool getSASVal(int *store, int *somelist, int length);
 
 	
 
@@ -270,6 +274,9 @@ namespace progression {
 
         void calcAddToActionMapping();
 
+        int hLength = 0;
+        lmGraph* LMs = nullptr;
+        int ihLM = -1;
     private:
 			bool first = true;
 

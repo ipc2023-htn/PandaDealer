@@ -124,7 +124,6 @@ namespace progression {
 
 
                         // compute the heuristic
-                        n2->heuristicValue = new int[hLength];
                         for (int ih = 0; ih < hLength; ih++) {
                             if (n2->goalReachable) {
 								bool found = false;
@@ -220,7 +219,6 @@ namespace progression {
                         //assert(!visitedList.insertVisi(n2));
 
                         // compute the heuristic
-                        n2->heuristicValue = new int[hLength];
                         for (int ih = 0; ih < hLength; ih++) {
                             if (n2->goalReachable) {
 								bool found = false;
@@ -325,6 +323,33 @@ namespace progression {
                 cout << "  - best solution after " << this->bestSolTime << "ms." << endl;
             }
             if (tnSol != nullptr) {
+//                if (tnSol->heuristicValue[0] != 0) {
+//                    cout << "hVal > 0: " << tnSol->heuristicValue[0] << endl;
+//                    htn->LMs->showDot((hhLMPayload*)tnSol->hPL[0]);
+//                }
+                if (htn->LMs != nullptr) {
+                    int unfulfilled = 0;
+                    for (int i = 0; i < htn->LMs->numLMs; i++) {
+                        if(!((hhLMPayload *) tnSol->hPL[htn->ihLM])->fulfilled[i]) {
+                            unfulfilled++;
+                        }
+                    }
+                    if (unfulfilled > 0) {
+                        cout << "ERROR LMs not empty: " << unfulfilled << " unfulfilled out of " << htn->LMs->numLMs << endl;
+//                        htn->LMs->showDot((hhLMPayload*)tnSol->hPL[0]);
+//                        htn->LMs->showDot((hhLMPayload*)tnSol->hPL[0]);
+//                        auto acc = ((hhLMPayload *) tnSol->hPL[htn->ihLM])->accepted;
+//                        for (int i = 0 ; i < htn->LMs->numLMs; i++) {
+//                            if (acc.find(i) == acc.end()) {
+//                                cout << i << ": " << endl;
+////                                htn->LMs->lms[i].lm[0]->lm
+//                            }
+//                        }
+//                        for (int i = 0; i < htn->numStateBits; i++) {
+//                            cout << i << ": " << tnSol->state[i] << endl;
+//                        }
+                    }
+                }
 #ifdef TRACESOLUTION
                 auto[sol, sLength] = extractSolutionFromSearchNode(htn, tnSol);
 #else

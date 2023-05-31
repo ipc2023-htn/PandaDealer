@@ -11,9 +11,6 @@
 typedef int tHVal;
 #define tHValUNR INT_MAX
 
-// florian
-#define PROGRESSIONBOUND 4
-#define CALCMINIMALIMPLIEDCOSTS
 // constants
 #define UNREACHABLE INT_MAX
 #define NOACTION -1
@@ -47,7 +44,7 @@ typedef int tHVal;
 
 
 
-#define TRACESOLUTION
+//#define TRACESOLUTION
 
 
 // if we write the state space to file, we need to disable pretty much all optimisations ...

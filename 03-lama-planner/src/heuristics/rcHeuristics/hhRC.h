@@ -40,27 +40,27 @@ namespace progression {
         const eEstimate estimate = estDISTANCE;
 
         void calcHtnGoalFacts(planStep *ps) {
-            // call for subtasks
-            for (int i = 0; i < ps->numSuccessors; i++) {
-                if (ps->successorList[i]->goalFacts == nullptr) {
-                    calcHtnGoalFacts(ps->successorList[i]);
-                }
-            }
-
-            // calc goals for this step
-            intSet.clear();
-            for (int i = 0; i < ps->numSuccessors; i++) {
-                for (int j = 0; j < ps->successorList[i]->numGoalFacts; j++) {
-                    intSet.insert(ps->successorList[i]->goalFacts[j]);
-                }
-            }
-            intSet.insert(ps->task);
-            ps->numGoalFacts = intSet.getSize();
-            ps->goalFacts = new int[ps->numGoalFacts];
-            int k = 0;
-            for (int t = intSet.getFirst(); t >= 0; t = intSet.getNext()) {
-                ps->goalFacts[k++] = t;
-            }
+//            // call for subtasks
+//            for (int i = 0; i < ps->numSuccessors; i++) {
+//                if (ps->successorList[i]->goalFacts == nullptr) {
+//                    calcHtnGoalFacts(ps->successorList[i]);
+//                }
+//            }
+//
+//            // calc goals for this step
+//            intSet.clear();
+//            for (int i = 0; i < ps->numSuccessors; i++) {
+//                for (int j = 0; j < ps->successorList[i]->numGoalFacts; j++) {
+//                    intSet.insert(ps->successorList[i]->goalFacts[j]);
+//                }
+//            }
+//            intSet.insert(ps->task);
+//            ps->numGoalFacts = intSet.getSize();
+//            ps->goalFacts = new int[ps->numGoalFacts];
+//            int k = 0;
+//            for (int t = intSet.getFirst(); t >= 0; t = intSet.getNext()) {
+//                ps->goalFacts[k++] = t;
+//            }
         }
 
 
@@ -78,98 +78,98 @@ namespace progression {
         }
 
         void setHeuristicValue(searchNode *n) {
-            // get facts holding in s0
-            for (int i = 0; i < m->numStateBits; i++) {
-                if (n->state[i]) {
-                    s0set.insert(i);
-                }
-            }
-
-            // generate goal
-            for (int i = 0; i < m->gSize; i++) {
-                gset.insert(m->gList[i]);
-            }
-
-            // add reachability facts and HTN-related goal
-            for (int i = 0; i < n->numAbstract; i++) {
-                if (n->unconstraintAbstract[i]->goalFacts == nullptr) {
-                    calcHtnGoalFacts(n->unconstraintAbstract[i]);
-                }
-
-                // add reachability facts
-                for (int j = 0; j < n->unconstraintAbstract[i]->numReachableT; j++) {
-                    s0set.insert(t2tdr(n->unconstraintAbstract[i]->reachableT[j]));
-                }
-
-                // add goal facts
-                for (int j = 0; j < n->unconstraintAbstract[i]->numGoalFacts; j++) {
-                    gset.insert(t2bur(n->unconstraintAbstract[i]->goalFacts[j]));
-                }
-            }
-            for (int i = 0; i < n->numPrimitive; i++) {
-                if (n->unconstraintPrimitive[i]->goalFacts == nullptr) {
-                    calcHtnGoalFacts(n->unconstraintPrimitive[i]);
-                }
-
-                // add reachability facts
-                for (int j = 0; j < n->unconstraintPrimitive[i]->numReachableT; j++) {
-                    s0set.insert(t2tdr(n->unconstraintPrimitive[i]->reachableT[j]));
-                }
-
-                // add goal facts
-                for (int j = 0; j < n->unconstraintPrimitive[i]->numGoalFacts; j++) {
-                    gset.insert(t2bur(n->unconstraintPrimitive[i]->goalFacts[j]));
-                }
-            }
-
-            n->heuristicValue[index] = this->sasH->getHeuristicValue(s0set, gset);
-            if (n->goalReachable) {
-                n->goalReachable = (n->heuristicValue[index] != UNREACHABLE);
-            }
-
-            if (correctTaskCount) {
-                if (n->goalReachable) {
-                    set<int> done;
-                    set<int> steps;
-                    set<int> tasks;
-                    forward_list<planStep *> todoList;
-
-                    for (int i = 0; i < n->numAbstract; i++) {
-                        todoList.push_front(n->unconstraintAbstract[i]);
-                        done.insert(n->unconstraintAbstract[i]->id);
-                    }
-                    for (int i = 0; i < n->numPrimitive; i++) {
-                        todoList.push_front(n->unconstraintPrimitive[i]);
-                        done.insert(n->unconstraintPrimitive[i]->id);
-                    }
-
-                    while (!todoList.empty()) {
-                        planStep *ps = todoList.front();
-                        todoList.pop_front();
-                        if (estimate == estCOSTS) {
-                            if (ps->task < m->numActions) {
-                                steps.insert(ps->id);
-                                tasks.insert(ps->task);
-                            }
-                        } else {
-                            steps.insert(ps->id);
-                            tasks.insert(ps->task);
-                        }
-                        for (int i = 0; i < ps->numSuccessors; i++) {
-                            planStep *subStep = ps->successorList[i];
-                            if (done.find(subStep->id) == done.end()) {
-                                todoList.push_front(subStep);
-                                done.insert(subStep->id);
-                            }
-                        }
-                    }
-                    assert(steps.size() >= tasks.size());
-                    n->heuristicValue += (steps.size() - tasks.size());
-                }
-            }
-
-            s0set.clear();
-            gset.clear();
+//            // get facts holding in s0
+//            for (int i = 0; i < m->numStateBits; i++) {
+//                if (n->state[i]) {
+//                    s0set.insert(i);
+//                }
+//            }
+//
+//            // generate goal
+//            for (int i = 0; i < m->gSize; i++) {
+//                gset.insert(m->gList[i]);
+//            }
+//
+//            // add reachability facts and HTN-related goal
+//            for (int i = 0; i < n->numAbstract; i++) {
+//                if (n->unconstraintAbstract[i]->goalFacts == nullptr) {
+//                    calcHtnGoalFacts(n->unconstraintAbstract[i]);
+//                }
+//
+//                // add reachability facts
+//                for (int j = 0; j < n->unconstraintAbstract[i]->numReachableT; j++) {
+//                    s0set.insert(t2tdr(n->unconstraintAbstract[i]->reachableT[j]));
+//                }
+//
+//                // add goal facts
+//                for (int j = 0; j < n->unconstraintAbstract[i]->numGoalFacts; j++) {
+//                    gset.insert(t2bur(n->unconstraintAbstract[i]->goalFacts[j]));
+//                }
+//            }
+//            for (int i = 0; i < n->numPrimitive; i++) {
+//                if (n->unconstraintPrimitive[i]->goalFacts == nullptr) {
+//                    calcHtnGoalFacts(n->unconstraintPrimitive[i]);
+//                }
+//
+//                // add reachability facts
+//                for (int j = 0; j < n->unconstraintPrimitive[i]->numReachableT; j++) {
+//                    s0set.insert(t2tdr(n->unconstraintPrimitive[i]->reachableT[j]));
+//                }
+//
+//                // add goal facts
+//                for (int j = 0; j < n->unconstraintPrimitive[i]->numGoalFacts; j++) {
+//                    gset.insert(t2bur(n->unconstraintPrimitive[i]->goalFacts[j]));
+//                }
+//            }
+//
+//            n->heuristicValue[index] = this->sasH->getHeuristicValue(s0set, gset);
+//            if (n->goalReachable) {
+//                n->goalReachable = (n->heuristicValue[index] != UNREACHABLE);
+//            }
+//
+//            if (correctTaskCount) {
+//                if (n->goalReachable) {
+//                    set<int> done;
+//                    set<int> steps;
+//                    set<int> tasks;
+//                    forward_list<planStep *> todoList;
+//
+//                    for (int i = 0; i < n->numAbstract; i++) {
+//                        todoList.push_front(n->unconstraintAbstract[i]);
+//                        done.insert(n->unconstraintAbstract[i]->id);
+//                    }
+//                    for (int i = 0; i < n->numPrimitive; i++) {
+//                        todoList.push_front(n->unconstraintPrimitive[i]);
+//                        done.insert(n->unconstraintPrimitive[i]->id);
+//                    }
+//
+//                    while (!todoList.empty()) {
+//                        planStep *ps = todoList.front();
+//                        todoList.pop_front();
+//                        if (estimate == estCOSTS) {
+//                            if (ps->task < m->numActions) {
+//                                steps.insert(ps->id);
+//                                tasks.insert(ps->task);
+//                            }
+//                        } else {
+//                            steps.insert(ps->id);
+//                            tasks.insert(ps->task);
+//                        }
+//                        for (int i = 0; i < ps->numSuccessors; i++) {
+//                            planStep *subStep = ps->successorList[i];
+//                            if (done.find(subStep->id) == done.end()) {
+//                                todoList.push_front(subStep);
+//                                done.insert(subStep->id);
+//                            }
+//                        }
+//                    }
+//                    assert(steps.size() >= tasks.size());
+//                    n->heuristicValue += (steps.size() - tasks.size());
+//                }
+//            }
+//
+//            s0set.clear();
+//            gset.clear();
         }
 
     public:

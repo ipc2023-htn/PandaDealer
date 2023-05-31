@@ -394,8 +394,7 @@ hhDOfree::~hhDOfree() {
     delete pg;
 }
 
-void hhDOfree::setHeuristicValue(searchNode *n, searchNode *parent,
-                                 int action) {
+void hhDOfree::setHeuristicValue(searchNode *n, searchNode *parent, int action) {
     int h = this->recreateModel(n);
     n->heuristicValue[index] = h;
     if(n->goalReachable) {
@@ -403,8 +402,7 @@ void hhDOfree::setHeuristicValue(searchNode *n, searchNode *parent,
     }
 }
 
-void hhDOfree::setHeuristicValue(searchNode *n, searchNode *parent, int absTask,
-                                 int method) {
+void hhDOfree::setHeuristicValue(searchNode *n, searchNode *parent, int absTask, int method) {
     this->setHeuristicValue(n, parent, -1);
 }
 
@@ -978,6 +976,21 @@ int hhDOfree::recreateModel(searchNode *n) {
         }
     }
 
+    if (!doNotUseTasks.empty()) {
+        for (auto it = doNotUseTasks.begin(); it != doNotUseTasks.end(); it++) {
+            int task = it->first;
+            int count = it->second;
+            model.add(v[iUA[task]] <= count);
+        }
+    }
+    if (!doNotUseMethods.empty()) {
+        for (auto it = doNotUseMethods.begin(); it != doNotUseMethods.end(); it++) {
+            int method = it->first;
+            int count = it->second;
+            model.add(v[iM[method]] <= count);
+        }
+    }
+
     IloCplex cplex(model);
 
     cplex.setParam(IloCplex::Param::Threads, 1);
@@ -1001,12 +1014,15 @@ int hhDOfree::recreateModel(searchNode *n) {
          cout << "value: time-limit" << endl;
          res = 0;*/
 
-        /*
-        cout << endl << endl << "SUM: " << res << endl;
+        containedTasks.clear();
+        containedMethods.clear();
+
+//        cout << endl << endl << "SUM: " << res << endl;
         for (int i = pg->reachableTasksSet.getFirst(); (i >= 0) && (i < htn->numActions); i = pg->reachableTasksSet.getNext()) {
             double d = cplex.getValue(v[iUA[i]]);
             if (d > 0.000001) {
-                cout <<  "T " << htn->taskNames[i] << " == " << d << endl;
+                containedTasks[i] = round(d);
+//                cout <<  "T " << htn->taskNames[i] << " == " << d << endl;
             }
         }
 
@@ -1014,10 +1030,11 @@ int hhDOfree::recreateModel(searchNode *n) {
              i = pg->reachableMethodsSet.getNext()) {
             double d = cplex.getValue(v[iM[i]]);
             if (d > 0.000001) {
-                cout <<  "M " << htn->taskNames[i] << " == " << d << endl;
+                containedMethods[i] = round(d);
+//                cout <<  "M " << htn->taskNames[i] << " == " << d << endl;
             }
         }
-        */
+
     } else {
         res = UNREACHABLE;
 /*

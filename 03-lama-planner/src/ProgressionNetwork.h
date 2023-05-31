@@ -16,6 +16,7 @@
 #include <set>
 #include <iostream>
 #include <forward_list>
+#include <HeuristicPayload.h>
 #include "heuristics/landmarks/lmDataStructures/landmark.h"
 #include "heuristics/landmarks/lmDataStructures/lookUpTab.h"
 #include "flags.h"
@@ -29,6 +30,7 @@ namespace progression {
 // forward declaration due to cyclic dependency
 struct Model;
 
+enum aStar {gValNone, gValPathCosts, gValActionCosts, gValActionPathCosts};
 
 #ifdef TRACESOLUTION
 extern int currentSolutionStepInstanceNumber;
@@ -65,8 +67,8 @@ struct planStep {
 	int* reachableT = nullptr;
 
     // todo: delete the following two values when RC is replaced by RC2
-	int numGoalFacts;
-	int* goalFacts = nullptr;
+//	int numGoalFacts;
+//	int* goalFacts = nullptr;
 
 	bool operator==(const planStep &that) const;
 
@@ -80,14 +82,15 @@ struct searchNode {
 	planStep** unconstraintAbstract;
 	planStep** unconstraintPrimitive;
 
+	inline static int numHeuristics;
 	int* heuristicValue = nullptr;
-	int fValue;
+	int fValue = 0;
 	bool goalReachable = true;
 	int modificationDepth;
 	int mixedModificationDepth;
 	int actionCosts = 0;
 
-//    HeuristicPayload** hPL = nullptr;
+    HeuristicPayload** hPL = nullptr;
 
 	solutionStep* solution;
 
