@@ -147,7 +147,8 @@ namespace progression {
                         }
                         
 			if (!n2->goalReachable) { // heuristic has detected unsol
-                            if ((suboptimalSearch) && (visitedList.canDeleteProcessedNodes)) {
+                            // if ((suboptimalSearch) && (visitedList.canDeleteProcessedNodes)) {
+                            if (!(suboptimalSearch) || (visitedList.canDeleteProcessedNodes)) {
                                 delete n2;
                             }
                             continue;
@@ -246,7 +247,8 @@ namespace progression {
                         }
                         
 			if (!n2->goalReachable) { // heuristic has detected unsol
-                            if ((suboptimalSearch) && (visitedList.canDeleteProcessedNodes)) {
+                            //if ((suboptimalSearch) && (visitedList.canDeleteProcessedNodes)) {
+                            if (!(suboptimalSearch) || (visitedList.canDeleteProcessedNodes)) {
                                 delete n2;
                             }
                             continue; // with next method
