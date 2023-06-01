@@ -3,7 +3,7 @@ set(CMAKE_CXX_STANDARD 17)
 
 # set(CPLEX_SOURCE_DIR /home/gregor/Workspace/cplex)
 # set(CPLEX_SOURCE_DIR /home/dh/Programme/CPLEX_Studio1210)
-set(CPLEX_SOURCE_DIR /home/dh/programme/cplex)
+#set(CPLEX_SOURCE_DIR /home/dh/programme/cplex)
 
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
@@ -26,7 +26,7 @@ add_definitions(-DIL_STD)
 #list(APPEND compiler_flags -Wall -Wextra -Wno-unused-parameter -Wno-sign-compare -pedantic "$<$<CONFIG:DEBUG>:-Og;-ggdb3;-lpthread>" "$<$<CONFIG:RELEASE>:-O2;-lpthread>")
 
 ## use locally:
- list(APPEND compiler_flags -Wall -Wextra -Wno-unused-parameter -Wno-sign-compare -pedantic)
+# list(APPEND compiler_flags -Wall -Wextra -Wno-unused-parameter -Wno-sign-compare -pedantic)
 
 if (CPLEX_SOURCE_DIR)
 	list(APPEND linker_flags "$<$<CONFIG:DEBUG>:-lpthread;-g>" "$<$<CONFIG:RELEASE>:-flto;-lpthread>")
