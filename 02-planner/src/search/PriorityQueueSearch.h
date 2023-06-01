@@ -32,7 +32,7 @@ namespace progression {
 
         template<class VisitedList, class Fringe>
         void
-        search(Model *htn, searchNode *tnI, int timeLimit, bool suboptimalSearch, bool pruneDeadEnds, bool printSolution, Heuristic **hF,
+        search(Model *htn, searchNode *tnI, int timeLimit, bool suboptimalSearch, bool optSol, bool pruneDeadEnds, bool printSolution, Heuristic **hF,
                int hLength, VisitedList &visitedList, Fringe &fringe) {
             timeval tp;
             gettimeofday(&tp, NULL);
@@ -49,7 +49,8 @@ namespace progression {
             cout << "Search Configuration" << endl;
             cout << "- Using JAIR 2020 progression algorithm" << endl;
 
-            if (optimzeSol) {
+            // if (optimzeSol) {
+            if (optSol) {
                 cout << "- After first solution is found, search is continued until ";
                 cout << "time limit to find better solution." << endl;
             } else {
@@ -88,10 +89,13 @@ namespace progression {
                     // -> continuing search makes not really sense here
                     gettimeofday(&tp, NULL);
                     currentT = tp.tv_sec * 1000 + tp.tv_usec / 1000;
-                    tnSol = handleNewSolution(n, tnSol, currentT - startT);
-                    continueSearch = this->optimzeSol;
+                    tnSol = handleNewSolution(n, tnSol, currentT - startT, optSol);
+                    // continueSearch = this->optimzeSol;
+                    continueSearch = optSol;
                     if (!continueSearch)
                         break;
+                    else
+                        continue;
                 }
 
                 if (n->numAbstract == 0) {
@@ -154,10 +158,13 @@ namespace progression {
                         if (suboptimalSearch && htn->isGoal(n2)) {
                             gettimeofday(&tp, NULL);
                             currentT = tp.tv_sec * 1000 + tp.tv_usec / 1000;
-                            tnSol = handleNewSolution(n2, tnSol, currentT - startT);
-                            continueSearch = this->optimzeSol;
+                            tnSol = handleNewSolution(n2, tnSol, currentT - startT, optSol);
+                            // continueSearch = this->optimzeSol;
+                            continueSearch = optSol;
                             if (!continueSearch)
                                 break;
+                            else
+                                continue;
                         }
 
                         fringe.push(n2);
@@ -251,10 +258,13 @@ namespace progression {
                         if (suboptimalSearch && htn->isGoal(n2)) {
                             gettimeofday(&tp, NULL);
                             currentT = tp.tv_sec * 1000 + tp.tv_usec / 1000;
-                            tnSol = handleNewSolution(n2, tnSol, currentT - startT);
-                            continueSearch = this->optimzeSol;
+                            tnSol = handleNewSolution(n2, tnSol, currentT - startT, optSol);
+                            // continueSearch = this->optimzeSol;
+                            continueSearch = optSol;
                             if (!continueSearch)
                                 break;
+                            else
+                                continue;
 
                         }
                         fringe.push(n2);
@@ -357,7 +367,7 @@ namespace progression {
 
 
     private:
-        searchNode *handleNewSolution(searchNode *newSol, searchNode *globalSolPointer, long time);
+        searchNode *handleNewSolution(searchNode *newSol, searchNode *globalSolPointer, long time, bool optSol);
 
         const bool optimzeSol = OPTIMIZEUNTILTIMELIMIT;
         int foundSols = 0;

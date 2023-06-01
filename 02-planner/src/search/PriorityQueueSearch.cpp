@@ -38,14 +38,14 @@ PriorityQueueSearch::~PriorityQueueSearch() {
 	// TODO Auto-generated destructor stub
 }
 
-searchNode* PriorityQueueSearch::handleNewSolution(searchNode* newSol, searchNode* oldSol, long time) {
+searchNode* PriorityQueueSearch::handleNewSolution(searchNode* newSol, searchNode* oldSol, long time, bool optSol) {
 	searchNode* res;
 	foundSols++;
 	if(oldSol == nullptr) {
 		res = newSol;
 		firstSolTime = time;
 		bestSolTime = time;
-		if (this->optimzeSol) {
+		if (optSol) {
 			cout << "SOLUTION: (" << time << "ms) Found first solution with action costs of " << newSol->actionCosts << "." << endl;
 		}
 	} else if(newSol->actionCosts < oldSol->actionCosts) {

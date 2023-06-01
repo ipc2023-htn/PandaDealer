@@ -448,7 +448,8 @@ int main(int argc, char *argv[]) {
 
 
 		bool printPlan = !args_info.noPlanOutput_flag;
-    	search.search(htn, tnI, timeL, suboptimalSearch, pruneDeadEnds, printPlan, heuristics, hLength, visi, fringe);
+		bool optSol = args_info.optSol_flag;
+    	search.search(htn, tnI, timeL, suboptimalSearch, optSol, pruneDeadEnds, printPlan, heuristics, hLength, visi, fringe);
 	} else if (algo == SAT){
 #ifndef CMAKE_NO_SAT
 		bool block_compression = args_info.blockcompression_flag;

@@ -35,6 +35,7 @@ option "astarweight" w "weight of the heuristic for weighted A* (also called gre
 option "gValue" g "g value. You can select\npath: one for each applied action and performed decomposition\nmixed: summed cost of the applied actions plus 1 for every applied decomposition\naction: summed cost of the applied actions\nnone: constant zero.\n" string values="path","action","mixed","none" default="path"
 option "suboptimal" - "suboptimal search (early goal test and visited lists ignores costs)" flag off
 option "pruneDeadEnds" - "enable pruning based on precs and effs of compound tasks" flag off
+option "optSol" - "Optimize solution until time limit is reached" flag off
 
 text "If you want to perform BFS, you need to run A* with the zero heuristic and select the gValue as path."
 text "If you want to perform DFS, you need to run A* with the inverted modDepth heuristic and select the gValue as none."
