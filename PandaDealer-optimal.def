@@ -88,3 +88,9 @@ Authors     Conny Olz <conny.olz@uni-ulm.de> and Daniel Höller <hoeller@cs.uni-
 SupportsRecursion yes
 SupportsPartialOrder no
 SupportsOptimalPlanning yes
+Track-TO-agile no
+Track-TO-satisficing no
+Track-TO-optimal yes
+Track-PO-agile no
+Track-PO-satisficing no
+Track-PO-optimal no
