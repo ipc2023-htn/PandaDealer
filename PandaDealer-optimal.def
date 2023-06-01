@@ -40,7 +40,7 @@ From: ubuntu:22.04
 	mv pandaPIgrounder ..
 	cd ..
 
-	cd 03-lama-planner/src
+	cd 02-planner/src
 	mkdir bin
 	cd bin
 	cmake ..
@@ -74,7 +74,7 @@ From: ubuntu:22.04
 		exit 102
 	fi
 
-	/planner/pandaPIengine "--heuristic=lama(lazy=false;ha=false;lm=lmc;useLMOrd=false;h=add;search=gbfs)" "$(basename "$1" .hddl)-$(basename "$2" .hddl).psas" >> panda.log
+	/planner/pandaPIengine --heuristic="rc2(lmc;cost)" --gValue=action --pruneDeadEnds "$(basename "$1" .hddl)-$(basename "$2" .hddl).psas" >> panda.log
 
 	/planner/pandaPIparser -c panda.log $3
 
@@ -87,4 +87,4 @@ Description Panda system (progression search) using DeadEnd Analysis with Look-a
 Authors     Conny Olz <conny.olz@uni-ulm.de> and Daniel Höller <hoeller@cs.uni-saarland.de> and Pascal Bercher <pascal.bercher@anu.edu.au>
 SupportsRecursion yes
 SupportsPartialOrder no
-SupportsOptimalPlanning no
+SupportsOptimalPlanning yes

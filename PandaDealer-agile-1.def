@@ -83,7 +83,7 @@ From: ubuntu:22.04
 ## Please use the same field names and use only one line for each value.
 %labels
 Name        PandaDealer
-Description PandaPI system (progression search) using DeadEnd Analysis with Look-aheads and Early Refinements
+Description Panda system (progression search) using DeadEnd Analysis with Look-aheads and Early Refinements
 Authors     Conny Olz <conny.olz@uni-ulm.de> and Daniel Höller <hoeller@cs.uni-saarland.de> and Pascal Bercher <pascal.bercher@anu.edu.au>
 SupportsRecursion yes
 SupportsPartialOrder no
