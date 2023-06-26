@@ -75,8 +75,8 @@ From: ubuntu:22.04
 		exit 102
 	fi
 	end_time=$(date +%s)
-    time_difference=$((end_time - start_time))
-    new_timelimit=$((1770 - time_difference))
+	time_difference=$((end_time - start_time))
+	new_timelimit=$((1770 - time_difference))
 
 	/planner/pandaPIengine --gValue=none --suboptimal --pruneDeadEnds --optSol --timelimit=$new_timelimit --heuristic="rc2(add)" "$(basename "$1" .hddl)-$(basename "$2" .hddl).psas" >> panda.log
 
