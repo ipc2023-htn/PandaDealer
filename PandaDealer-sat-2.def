@@ -61,6 +61,7 @@ From: ubuntu:22.04
 	## PLANFILE=$3
 
 	## run your planner here
+	start_time=$(date +%s)
 	/planner/pandaPIparser $1 $2 temp.parsed
 	if [ ! -f temp.parsed ]; then
 		echo "Parsing failed."
@@ -73,8 +74,11 @@ From: ubuntu:22.04
 		echo "Grounding failed."
 		exit 102
 	fi
+	end_time=$(date +%s)
+	time_difference=$((end_time - start_time))
+	new_timelimit=$((1780 - time_difference))
 
-	/planner/pandaPIengine --astarweight=2 --suboptimal --pruneDeadEnds --heuristic="rc2(ff)" --optSol --timelimit=1780 "$(basename "$1" .hddl)-$(basename "$2" .hddl).psas" >> panda.log
+	/planner/pandaPIengine --astarweight=2 --suboptimal --pruneDeadEnds --heuristic="rc2(ff)" --optSol --timelimit=$new_timelimit "$(basename "$1" .hddl)-$(basename "$2" .hddl).psas" >> panda.log
 
 	/planner/pandaPIparser -c panda.log $3
 
