@@ -40,7 +40,7 @@ From: ubuntu:22.04
 	mv pandaPIgrounder ..
 	cd ..
 
-	cd 02-planner/src
+	cd 03-planner/src
 	mkdir bin
 	cd bin
 	cmake ..
