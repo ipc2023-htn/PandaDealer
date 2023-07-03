@@ -34,6 +34,7 @@ namespace progression {
         void
         search(Model *htn, searchNode *tnI, int timeLimit, bool suboptimalSearch, bool optSol, bool pruneDeadEnds, bool printSolution, Heuristic **hF,
                int hLength, VisitedList &visitedList, Fringe &fringe) {
+            this->htnmodel = htn;
             timeval tp;
             gettimeofday(&tp, NULL);
             long startT = tp.tv_sec * 1000 + tp.tv_usec / 1000;
@@ -367,8 +368,9 @@ namespace progression {
 #endif
         }
 
-
+        string solFileName = "-";
     private:
+        Model *htnmodel;
         searchNode *handleNewSolution(searchNode *newSol, searchNode *globalSolPointer, long time, bool optSol);
 
         const bool optimzeSol = OPTIMIZEUNTILTIMELIMIT;

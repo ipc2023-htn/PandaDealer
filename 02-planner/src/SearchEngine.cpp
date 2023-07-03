@@ -191,13 +191,18 @@ int main(int argc, char *argv[]) {
     	inputFiles.push_back(args_info.inputs[i]);
 
 	std::string inputFilename = "-";
+    std::string solutionFilename = "-";
 
-	if (inputFiles.size() > 1){
+	if (inputFiles.size() > 2){
 		std::cerr << "You may specify at most one file as input: the SAS+ problem description" << std::endl;
 		return 1;
-	} else {
+	} else if (inputFiles.size() == 1) {
 		if (inputFiles.size())
 			inputFilename = inputFiles[0];
+	} else {
+        if (inputFiles.size())
+            inputFilename = inputFiles[0];
+        solutionFilename =  inputFiles[1];
 	}
 
 	std::istream * inputStream;
@@ -445,7 +450,7 @@ int main(int argc, char *argv[]) {
 		VisitedList visi(htn,noVisitedList, suboptimalSearch, taskHash, taskSequenceHash, topologicalOrdering, orderPairsHash, layerHash, allowGIcheck, allowParalleSequencesMode);
     	PriorityQueueSearch search;
     	OneQueueWAStarFringe fringe(aStarType, aStarWeight, hLength);
-
+        search.solFileName = solutionFilename;
 
 		bool printPlan = !args_info.noPlanOutput_flag;
 		bool optSol = args_info.optSol_flag;
