@@ -62,7 +62,7 @@ searchNode* PriorityQueueSearch::handleNewSolution(searchNode* newSol, searchNod
 		// cout << "Found new solution with action costs of " << newSol->actionCosts << "." << endl;
 		res = oldSol;
 	}
-    if (betterSol) {
+    if (optSol && betterSol) {
         auto[sol, sLength] = extractSolutionFromSearchNode(htnmodel, res);
         cout << "- Found solution of length " << sLength << endl;
         cout << "- Total costs of actions: " << res->actionCosts << endl;
@@ -83,45 +83,3 @@ searchNode* PriorityQueueSearch::handleNewSolution(searchNode* newSol, searchNod
 /// closing namespace
 }
 
-/*
-searchNode* PriorityQueueSearch::handleNewSolution(searchNode* newSol, searchNode* oldSol, long time) {
-    searchNode* res;
-    foundSols++;
-    bool betterSol = false;
-    if (oldSol == nullptr) {
-        cout << "- Status: Solved" << endl;
-        res = newSol;
-        firstSolTime = time;
-        bestSolTime = time;
-        if (this->optimzeSol) {
-            cout << "SOLUTION: (" << time << "ms) Found first solution with action costs of " << newSol->actionCosts << "." << endl;
-        }
-
-        betterSol = true;
-    } else if(newSol->actionCosts < oldSol->actionCosts) {
-        // shall optimize until time limit, this is a better one
-        bestSolTime = time;
-        res = newSol;
-        solImproved++;
-        cout << "SOLUTION: (" << time << "ms) Found new solution with action costs of " << newSol->actionCosts << "." << endl;
-        betterSol = true;
-    } else {
-        //cout << "Found new solution with action costs of " << newSol->actionCosts << "." << endl;
-        res = oldSol;
-    }
-    if (betterSol) {
-        auto[sol, sLength] = extractSolutionFromSearchNode(htnmodel, res);
-        cout << "- Found solution of length " << sLength << endl;
-        cout << "- Total costs of actions: " << res->actionCosts << endl;
-        ofstream newsol;
-        newsol.open ("solution.raw", std::ofstream::out | std::ofstream::trunc);
-        newsol << sol;
-        newsol.close();
-        cout << sol << endl;
-
-        string cmd = "/planner/pandaPIparser -c solution.raw " + this->solFileName;
-        cout << "executing: " << cmd << endl;
-        int ret = system(cmd.c_str());
-    }
-    return res;
-}*/
