@@ -89,7 +89,7 @@ SupportsRecursion yes
 SupportsPartialOrder no
 SupportsOptimalPlanning no
 Track-TO-agile yes
-Track-TO-satisficing no
+Track-TO-satisficing yes
 Track-TO-optimal no
 Track-PO-agile no
 Track-PO-satisficing no
